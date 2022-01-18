@@ -8,8 +8,10 @@ import { isPromise, isFunction } from '@vue/shared'
 export const enum ErrorCodes {
   SETUP_FUNCTION,
   RENDER_FUNCTION,
+  /** 错误码表示：执行watchEffect中的回调函数出错了 */
   WATCH_GETTER,
   WATCH_CALLBACK,
+  /** 错误码表示：清除副作用的时候出错了 */
   WATCH_CLEANUP,
   NATIVE_EVENT_HANDLER,
   COMPONENT_EVENT_HANDLER,
@@ -57,6 +59,7 @@ export const ErrorTypeStrings: Record<number | string, string> = {
     'Please open an issue at https://new-issue.vuejs.org/?repo=vuejs/vue-next'
 }
 
+/** 错误类型，包括生命周期异常，watch computed执行过程中的异常等 */
 export type ErrorTypes = LifecycleHooks | ErrorCodes
 
 export function callWithErrorHandling(

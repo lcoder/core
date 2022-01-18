@@ -236,9 +236,12 @@ function doWatch(
         if (instance && instance.isUnmounted) {
           return
         }
+        // watchEffect，如果注册了onInvalidate，就清空上次的副作用。比如取消异步请求
         if (cleanup) {
           cleanup()
         }
+        // 这里的source会接受[onCleanup]作为参数调用。source(onCleanup)
+        // watchEffect中，会接受onInvalidate入参（就是这个onCleanup），每次数据脏了之后，重新执行清除函数. 比如 onInvalidate(() => promise.cancel())
         return callWithAsyncErrorHandling(
           source,
           instance,
@@ -273,6 +276,8 @@ function doWatch(
   }
 
   let cleanup: () => void
+
+  // fn 就是注册的副作用清除函数；比如watchEffect中onInvalidate里面注册的回调
   let onCleanup: OnCleanup = (fn: () => void) => {
     cleanup = effect.onStop = () => {
       callWithErrorHandling(fn, instance, ErrorCodes.WATCH_CLEANUP)

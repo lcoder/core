@@ -44,6 +44,7 @@ export type DebuggerEventExtraInfo = {
   oldTarget?: Map<any, any> | Set<any>
 }
 
+/** 监听响应式对象变化的，副作用栈 */
 const effectStack: ReactiveEffect[] = []
 let activeEffect: ReactiveEffect | undefined
 
@@ -64,8 +65,11 @@ export class ReactiveEffect<T = any> {
   onTrigger?: (event: DebuggerEvent) => void
 
   constructor(
+    /** 计算函数, watchEffect, computed传入的回调函数 */
     public fn: () => T,
+    /** 调度器，比如在更新到ui之前，还是之后。运行fn */
     public scheduler: EffectScheduler | null = null,
+    /** 父作用域 */
     scope?: EffectScope | null
   ) {
     recordEffectScope(this, scope)
@@ -77,11 +81,14 @@ export class ReactiveEffect<T = any> {
     }
     if (!effectStack.includes(this)) {
       try {
+        // 先入栈 ，同时激活activeEffect为当前effect
+        // snapshot [{"active":true,"deps":[]}]
         effectStack.push((activeEffect = this))
+
         enableTracking()
 
-        trackOpBit = 1 << ++effectTrackDepth
-
+        // 2的effectTrackDepth次平方
+        trackOpBit = 1 << ++effectTrackDepth // 2 4 6 8 10
         if (effectTrackDepth <= maxMarkerBits) {
           initDepMarkers(this)
         } else {
@@ -93,7 +100,7 @@ export class ReactiveEffect<T = any> {
           finalizeDepMarkers(this)
         }
 
-        trackOpBit = 1 << --effectTrackDepth
+        trackOpBit = 1 << --effectTrackDepth // 会到之前的位置
 
         resetTracking()
         effectStack.pop()
@@ -175,20 +182,28 @@ export function pauseTracking() {
   shouldTrack = false
 }
 
+/**
+ * 开启追踪 shouldTrack = true
+ */
 export function enableTracking() {
   trackStack.push(shouldTrack)
   shouldTrack = true
 }
-
+/**
+ * 重置追踪
+ */
 export function resetTracking() {
   const last = trackStack.pop()
   shouldTrack = last === undefined ? true : last
 }
 
+/** 依赖追踪 */
 export function track(target: object, type: TrackOpTypes, key: unknown) {
+  // 普通的属性读取，不需要继续往下
   if (!isTracking()) {
     return
   }
+
   let depsMap = targetMap.get(target)
   if (!depsMap) {
     targetMap.set(target, (depsMap = new Map()))

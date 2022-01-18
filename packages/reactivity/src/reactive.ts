@@ -16,8 +16,10 @@ import { UnwrapRefSimple, Ref } from './ref'
 export const enum ReactiveFlags {
   SKIP = '__v_skip',
   IS_REACTIVE = '__v_isReactive',
+  /** 是否是只读的 */
   IS_READONLY = '__v_isReadonly',
   IS_SHALLOW = '__v_isShallow',
+  /** 获取proxy代理对象的原始值 */
   RAW = '__v_raw'
 }
 
@@ -28,12 +30,18 @@ export interface Target {
   [ReactiveFlags.IS_SHALLOW]?: boolean
   [ReactiveFlags.RAW]?: any
 }
+/** 所有被reactive包裹的缓存 */
+export const reactiveMap = new WeakMap<Target, any>();
 
-export const reactiveMap = new WeakMap<Target, any>()
 export const shallowReactiveMap = new WeakMap<Target, any>()
 export const readonlyMap = new WeakMap<Target, any>()
 export const shallowReadonlyMap = new WeakMap<Target, any>()
 
+/** 对象类型。
+ * common 对象/数组
+ * collection Map/Set/WeakMap/WeaSet 集合类型
+ * invalid 除上述之外其他类型
+ * */
 const enum TargetType {
   INVALID = 0,
   COMMON = 1,
@@ -92,6 +100,7 @@ export function reactive(target: object) {
   if (isReadonly(target)) {
     return target
   }
+
   return createReactiveObject(
     target,
     false,
@@ -236,6 +245,7 @@ export function isProxy(value: unknown): boolean {
   return isReactive(value) || isReadonly(value)
 }
 
+/** 获取响应式对象的原始target */
 export function toRaw<T>(observed: T): T {
   const raw = observed && (observed as Target)[ReactiveFlags.RAW]
   return raw ? toRaw(raw) : observed

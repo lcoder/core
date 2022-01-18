@@ -88,6 +88,7 @@ function createGetter(isReadonly = false, shallow = false) {
     } else if (key === ReactiveFlags.IS_SHALLOW) {
       return shallow
     } else if (
+      // 获取proxy过的原始对象
       key === ReactiveFlags.RAW &&
       receiver ===
         (isReadonly
@@ -114,6 +115,7 @@ function createGetter(isReadonly = false, shallow = false) {
       return res
     }
 
+    // 顺便跟踪一下，只读的不需要响应式，所以不需要
     if (!isReadonly) {
       track(target, TrackOpTypes.GET, key)
     }
@@ -152,6 +154,7 @@ function createSetter(shallow = false) {
     let oldValue = (target as any)[key]
     if (!shallow && !isReadonly(value)) {
       if (!isShallow(value)) {
+        // 提取原始值值
         value = toRaw(value)
         oldValue = toRaw(oldValue)
       }
@@ -173,6 +176,7 @@ function createSetter(shallow = false) {
       if (!hadKey) {
         trigger(target, TriggerOpTypes.ADD, key, value)
       } else if (hasChanged(value, oldValue)) {
+        // 有key，且值变化了
         trigger(target, TriggerOpTypes.SET, key, value, oldValue)
       }
     }

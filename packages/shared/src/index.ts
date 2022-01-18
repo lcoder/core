@@ -41,6 +41,8 @@ export const remove = <T>(arr: T[], el: T) => {
 }
 
 const hasOwnProperty = Object.prototype.hasOwnProperty
+
+/** 是否是自身属性 */
 export const hasOwn = (
   val: object,
   key: string | symbol
@@ -57,6 +59,8 @@ export const isFunction = (val: unknown): val is Function =>
   typeof val === 'function'
 export const isString = (val: unknown): val is string => typeof val === 'string'
 export const isSymbol = (val: unknown): val is symbol => typeof val === 'symbol'
+
+/** 是否是对象（包含普通对象和数组，不包含null） */
 export const isObject = (val: unknown): val is Record<any, any> =>
   val !== null && typeof val === 'object'
 
@@ -76,6 +80,11 @@ export const toRawType = (value: unknown): string => {
 export const isPlainObject = (val: unknown): val is object =>
   toTypeString(val) === '[object Object]'
 
+/**
+ * 是不是字数类型的key，比如 '12'，不能是负数：'-12'
+ * @param key any
+ * @returns 
+ */
 export const isIntegerKey = (key: unknown) =>
   isString(key) &&
   key !== 'NaN' &&

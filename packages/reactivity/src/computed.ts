@@ -23,14 +23,22 @@ export interface WritableComputedOptions<T> {
   set: ComputedSetter<T>
 }
 
+/**
+ * ComputedRef实现
+ */
 class ComputedRefImpl<T> {
   public dep?: Dep = undefined
 
+  /** 存储的计算值 */
   private _value!: T
+
+  /** 值是否脏的标记，值是否过期了（dep变化了，默认true，导致第一次computed.value就会执行effect计算） */
   private _dirty = true
+
   public readonly effect: ReactiveEffect<T>
 
   public readonly __v_isRef = true
+  /** 该computed.value是否是只读的 */
   public readonly [ReactiveFlags.IS_READONLY]: boolean
 
   constructor(

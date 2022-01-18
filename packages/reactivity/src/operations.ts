@@ -2,6 +2,7 @@
 // debugger events
 
 export const enum TrackOpTypes {
+  /** 读取属性操作 */
   GET = 'get',
   HAS = 'has',
   ITERATE = 'iterate'

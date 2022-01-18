@@ -79,6 +79,10 @@ export function effectScope(detached?: boolean) {
   return new EffectScope(detached)
 }
 
+/** 
+ * 记录effect
+ * 父scope，会通过effects属性，记录子effect
+ */
 export function recordEffectScope(
   effect: ReactiveEffect,
   scope?: EffectScope | null
