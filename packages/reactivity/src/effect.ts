@@ -20,6 +20,7 @@ const targetMap = new WeakMap<any, KeyToDepMap>()
 // The number of effects currently being tracked recursively.
 let effectTrackDepth = 0
 
+/** 追踪的嵌套次数 */
 export let trackOpBit = 1
 
 /**
@@ -79,28 +80,34 @@ export class ReactiveEffect<T = any> {
     if (!this.active) {
       return this.fn()
     }
+
     if (!effectStack.includes(this)) {
       try {
         // 先入栈 ，同时激活activeEffect为当前effect
-        // snapshot [{"active":true,"deps":[]}]
+        // snapshot this = [{"active":true,"deps":[]}]
         effectStack.push((activeEffect = this))
 
         enableTracking()
 
         // 2的effectTrackDepth次平方
-        trackOpBit = 1 << ++effectTrackDepth // 2 4 6 8 10
+        trackOpBit = 1 << ++effectTrackDepth // 2 4 6 8 16
         if (effectTrackDepth <= maxMarkerBits) {
           initDepMarkers(this)
         } else {
           cleanupEffect(this)
         }
-        return this.fn()
+        // watchEffect的回调函数，执行返回值，直接返回
+        console.log(111, JSON.stringify(this.deps));
+        const aaa = this.fn();
+        console.log(222, JSON.stringify(this.deps));
+        return aaa;
       } finally {
         if (effectTrackDepth <= maxMarkerBits) {
+          // this.deps = [{"w":0,"n":2}];
           finalizeDepMarkers(this)
         }
 
-        trackOpBit = 1 << --effectTrackDepth // 会到之前的位置
+        trackOpBit = 1 << --effectTrackDepth // 16 8 6 4 2 1会到之前的位置
 
         resetTracking()
         effectStack.pop()
@@ -175,6 +182,8 @@ export function stop(runner: ReactiveEffectRunner) {
 }
 
 let shouldTrack = true
+
+/** 缓存是否开启追踪的状态 */
 const trackStack: boolean[] = []
 
 export function pauseTracking() {
@@ -197,17 +206,25 @@ export function resetTracking() {
   shouldTrack = last === undefined ? true : last
 }
 
-/** 依赖追踪 */
+/** 
+ * 依赖追踪
+ * 对属性读取，创建effect对象
+ * */
 export function track(target: object, type: TrackOpTypes, key: unknown) {
-  // 普通的属性读取，不需要继续往下
+  // 普通的属性读取，不做追踪
+  // 就是不是在computed或者watchEffect回调中读取的，不需要响应式的地方
+  // 直接读取的情况
   if (!isTracking()) {
     return
   }
+  // 接下来有ReactiveEffect存在的情况了
+  // 就是在computed或者watchEffect中读取属性了
 
   let depsMap = targetMap.get(target)
   if (!depsMap) {
     targetMap.set(target, (depsMap = new Map()))
   }
+
   let dep = depsMap.get(key)
   if (!dep) {
     depsMap.set(key, (dep = createDep()))
@@ -216,10 +233,10 @@ export function track(target: object, type: TrackOpTypes, key: unknown) {
   const eventInfo = __DEV__
     ? { effect: activeEffect, target, type, key }
     : undefined
-
   trackEffects(dep, eventInfo)
 }
 
+// 当前是否正在出于追踪的状态
 export function isTracking() {
   return shouldTrack && activeEffect !== undefined
 }

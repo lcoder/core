@@ -7,12 +7,11 @@ const { h, watch, watchEffect } = Vue;
 
 const originName = Vue.reactive({ UserNameZan: 'maotingfeng' });
 
-const dispose = watchEffect((onIn) => {
-  console.log('name=', originName.UserNameZan)
-  onIn(() => {
-    console.log('哈哈哈，销毁了');
-  });
+const dispose = watchEffect(() => {
+  console.log('name=', originName.UserNameZan);
 });
+
+// originName.UserNameZan = '123';
 // dispose();
 // Vue.createApp({
 //   setup: () => {

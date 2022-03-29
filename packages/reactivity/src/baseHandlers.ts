@@ -108,14 +108,13 @@ function createGetter(isReadonly = false, shallow = false) {
     if (!isReadonly && targetIsArray && hasOwn(arrayInstrumentations, key)) {
       return Reflect.get(arrayInstrumentations, key, receiver)
     }
-
     const res = Reflect.get(target, key, receiver)
 
     if (isSymbol(key) ? builtInSymbols.has(key) : isNonTrackableKeys(key)) {
       return res
     }
 
-    // 顺便跟踪一下，只读的不需要响应式，所以不需要
+    // 顺便跟踪一下，只读的不需要响应式，所以不需要追踪
     if (!isReadonly) {
       track(target, TrackOpTypes.GET, key)
     }

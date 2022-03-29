@@ -9,10 +9,12 @@ export type Dep = Set<ReactiveEffect> & TrackedMarkers
  */
 type TrackedMarkers = {
   /**
+   * 这个effect有没有被追踪
    * wasTracked
    */
   w: number
   /**
+   * 是否是最新的effetc
    * newTracked
    */
   n: number
@@ -29,6 +31,10 @@ export const wasTracked = (dep: Dep): boolean => (dep.w & trackOpBit) > 0
 
 export const newTracked = (dep: Dep): boolean => (dep.n & trackOpBit) > 0
 
+/**
+ * 将依赖标记为被追踪过了
+ * @param param0 
+ */
 export const initDepMarkers = ({ deps }: ReactiveEffect) => {
   if (deps.length) {
     for (let i = 0; i < deps.length; i++) {
